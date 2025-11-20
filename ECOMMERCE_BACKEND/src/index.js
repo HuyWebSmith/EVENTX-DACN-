@@ -4,11 +4,12 @@ const { mongo, default: mongoose } = require("mongoose");
 const userRoutes = require("./routes/UserRouter");
 const eventRoutes = require("./routes/EventRouter");
 const bodyParser = require("body-parser");
+const cors = require("cors");
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3001;
-
+app.use(cors());
 app.use(express.json());
 
 app.use("/api/user", userRoutes);

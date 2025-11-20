@@ -2,13 +2,12 @@ const UserService = require("../services/UserService");
 const JWTService = require("../services/JWTService");
 const createUser = async (req, res) => {
   try {
-    console.log(req.body);
     const { fullName, email, passwordHash, confirmPassword, phone } = req.body;
 
     const reg = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const isCheckEmail = reg.test(email);
     console.log("isCheckEmail", isCheckEmail);
-    if (!fullName || !email || !passwordHash || !confirmPassword || !phone) {
+    if (!email || !passwordHash) {
       return res.status(200).json({
         status: "ERR",
         message: "The input is required",
@@ -39,7 +38,7 @@ const createUser = async (req, res) => {
 const loginUser = async (req, res) => {
   try {
     const { email, passwordHash } = req.body;
-
+    console.log("req.body", req.body);
     if (!email || !passwordHash) {
       return res.status(200).json({
         status: "ERR",
