@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-const { ORDER_STATUSES } = require("./constants"); // Giả định
+const { ORDER_STATUSES } = require("../utils/constants"); // Giả định
 
 const orderSchema = new Schema(
   {
@@ -17,11 +17,10 @@ const orderSchema = new Schema(
       min: 0,
     },
 
-    // Thông tin người mua
     fullName: { type: String, required: true },
     email: { type: String, required: true },
     phoneNumber: { type: String, required: true },
-
+    address: { type: String, require: true },
     orderStatus: {
       type: String,
       enum: ORDER_STATUSES,

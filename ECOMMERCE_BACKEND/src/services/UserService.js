@@ -49,24 +49,24 @@ const loginUser = (userLogin) => {
   return new Promise(async (resolve, reject) => {
     try {
       if (!userLogin) {
-        return reject("userLogin  is undefined");
+        return reject("userLogin is undefined");
       }
 
       const { email, passwordHash } = userLogin;
-      const checkUser = await User.findOne({
-        email: email,
-      });
-      if (checkUser === null) {
-        return resolve({
-          status: "ERR",
-          message: "The email is not defined",
-          data: null,
-        });
-      }
 
       if (!email || !passwordHash) {
         return reject("Missing required fields");
       }
+
+      const checkUser = await User.findOne({ email });
+      if (!checkUser) {
+        return resolve({
+          status: "ERR",
+          message: "Email chưa được đăng ký",
+          data: null,
+        });
+      }
+
       const comparePassword = bcrypt.compareSync(
         passwordHash,
         checkUser.passwordHash
@@ -75,10 +75,11 @@ const loginUser = (userLogin) => {
       if (!comparePassword) {
         return resolve({
           status: "ERR",
-          message: "The password or user is incorrect",
+          message: "Mật khẩu hoặc user không chính xác",
           data: null,
         });
       }
+
       const access_token = await generalAccessToken({
         id: checkUser.id,
         isAdmin: checkUser.isAdmin,
@@ -146,6 +147,19 @@ const deleteUser = (id) => {
     }
   });
 };
+const deleteManyUser = (ids) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      await User.deleteMany({ _id: ids });
+      return resolve({
+        status: "OK",
+        message: "DELETE USER SUCCESS",
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
 
 const getAllUser = () => {
   return new Promise(async (resolve, reject) => {
@@ -193,4 +207,5 @@ module.exports = {
   deleteUser,
   getAllUser,
   getDetailUser,
+  deleteManyUser,
 };

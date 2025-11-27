@@ -4,14 +4,9 @@ const Schema = mongoose.Schema;
 
 const userSchema = new Schema(
   {
-    // Sử dụng username/email, password từ Mongoose/Authentication Library
-
-    // IdentityUser fields (ví dụ: email, passwordHash) thường được Mongoose tự động tạo/quản lý
     email: { type: String, required: true, unique: true, trim: true },
     passwordHash: { type: String, required: true },
     phone: { type: String, require: true },
-    access_token: { type: String, require: true },
-    refresh_token: { type: String, require: true },
 
     fullName: { type: String, required: true, maxLength: 100 },
     gender: { type: String, enum: ["Male", "Female", "Other"] },

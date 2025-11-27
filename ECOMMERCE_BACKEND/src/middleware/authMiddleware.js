@@ -1,56 +1,64 @@
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 dotenv.config();
+
+// Lấy token chuẩn từ header
+function getToken(req) {
+  const authHeader = req.headers.authorization || req.headers.token;
+  if (!authHeader || typeof authHeader !== "string") return null;
+
+  // Nếu dạng "Bearer <token>"
+  if (authHeader.startsWith("Bearer ")) return authHeader.split(" ")[1];
+
+  return authHeader; // dạng token thẳng
+}
+
+// Middleware kiểm tra admin
 const authMiddleWare = (req, res, next) => {
-  const authHeader = req.headers.authorization || req.headers.token;
-  if (!authHeader || typeof authHeader !== "string") {
-    return res
-      .status(401)
-      .json({ message: "Missing authentication token", status: "ERROR" });
-  }
-  const parts = authHeader.split(" ");
-  const token = parts.length > 1 ? parts[1] : parts[0];
-  jwt.verify(token, process.env.ACCESS_TOKEN, function (err, user) {
+  const token = getToken(req);
+  if (!token)
+    return res.status(401).json({ message: "Missing token", status: "ERROR" });
+
+  jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
     if (err) {
+      console.log("JWT Error:", err.message); // chỉ log message
       return res
         .status(401)
-        .json({ message: "Invalid or expired token", status: "ERROR" });
+        .json({ message: "Token invalid or expired", status: "ERROR" });
     }
-    const { payload } = user;
-    if (payload && payload.isAdmin) {
-      return next();
-    }
-    return res
-      .status(403)
-      .json({ message: "Admin privileges required", status: "ERROR" });
+
+    if (!decoded.isAdmin)
+      return res.status(403).json({ message: "Admin only", status: "ERROR" });
+
+    req.user = decoded;
+    next();
   });
 };
 
+// Middleware kiểm tra user (admin hoặc chính user)
 const authUserMiddleWare = (req, res, next) => {
-  const authHeader = req.headers.authorization || req.headers.token;
-  if (!authHeader || typeof authHeader !== "string") {
-    return res
-      .status(401)
-      .json({ message: "Missing authentication token", status: "ERROR" });
-  }
-  const parts = authHeader.split(" ");
-  const token = parts.length > 1 ? parts[1] : parts[0];
-  const userId = req.params.id;
+  const token = getToken(req);
+  if (!token)
+    return res.status(401).json({ message: "Missing token", status: "ERROR" });
 
-  jwt.verify(token, process.env.ACCESS_TOKEN, function (err, user) {
+  jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
     if (err) {
+      console.log("JWT Error:", err.message);
       return res
         .status(401)
-        .json({ message: "Invalid or expired token", status: "ERROR" });
+        .json({ message: "Token invalid or expired", status: "ERROR" });
     }
-    const { payload } = user;
-    if (payload && (payload.isAdmin || payload.id === userId)) {
-      return next();
-    }
-    return res.status(403).json({ message: "Not authorized", status: "ERROR" });
+
+    const userId = req.params.id;
+    // So sánh kiểu string để tránh sai
+    if (!(decoded.isAdmin || decoded.id.toString() === userId))
+      return res
+        .status(403)
+        .json({ message: "Not authorized", status: "ERROR" });
+
+    req.user = decoded;
+    next();
   });
 };
-module.exports = {
-  authMiddleWare,
-  authUserMiddleWare,
-};
+
+module.exports = { authMiddleWare, authUserMiddleWare };

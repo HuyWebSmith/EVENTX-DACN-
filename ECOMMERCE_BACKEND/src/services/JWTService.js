@@ -4,7 +4,7 @@ dotenv.config();
 const generalAccessToken = (payload) => {
   const access_token = jwt.sign(
     {
-      payload,
+      ...payload,
     },
     process.env.ACCESS_TOKEN,
     { expiresIn: "30s" }
@@ -14,7 +14,7 @@ const generalAccessToken = (payload) => {
 const generalRefreshToken = (payload) => {
   const refresh_token = jwt.sign(
     {
-      payload,
+      ...payload,
     },
     process.env.REFRESH_TOKEN,
     { expiresIn: "356d" }
@@ -31,10 +31,10 @@ const refreshTokenJWTService = (token) => {
             message: "The authentication",
           });
         }
-        const { payload } = user;
+
         const access_token = await generalAccessToken({
-          id: payload.id,
-          isAdmin: payload.isAdmin,
+          id: user?.id,
+          isAdmin: user?.isAdmin,
         });
 
         return resolve({

@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-const { TICKET_TYPES, TICKET_STATUSES } = require("./constants"); // Giả định
+const { TICKET_TYPES, TICKET_STATUSES } = require("../utils/constants"); // Giả định
 
 const ticketSchema = new Schema({
   eventId: {
@@ -12,9 +12,8 @@ const ticketSchema = new Schema({
 
   type: {
     type: String,
-    enum: TICKET_TYPES,
-    default: "GeneralAdmission",
     required: true,
+    trim: true,
   },
 
   price: {

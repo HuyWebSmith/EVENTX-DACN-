@@ -1,12 +1,12 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-const { BUSINESS_TYPES } = require("../utils/constants"); // Giả định
+const { BUSINESS_TYPES } = require("../utils/constants");
 
 const redInvoiceSchema = new Schema({
   businessType: {
     type: String,
-    enum: BUSINESS_TYPES,
     required: true,
+    trim: true,
   },
 
   fullName: { type: String, required: true, maxLength: 100 },

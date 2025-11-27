@@ -4,11 +4,7 @@ const { EVENT_STATUSES } = require("../utils/constants");
 
 const eventSchema = new Schema(
   {
-    organizerId: {
-      type: String,
-      ref: "ApplicationUser",
-      required: true,
-    },
+    organizerId: { type: String, required: true },
     organizerEmail: { type: String, required: true, trim: true },
     organizerName: { type: String, required: true, maxLength: 255 },
     organizerInfo: { type: String, maxLength: 1000 },
@@ -30,6 +26,7 @@ const eventSchema = new Schema(
     },
 
     buyerMessage: { type: String },
+    image: { type: String },
     createdAt: { type: Date, default: Date.now },
 
     categoryId: {
@@ -45,7 +42,6 @@ const eventSchema = new Schema(
   }
 );
 
-// Các trường ảo mô phỏng ICollection/List
 eventSchema.virtual("eventImages", {
   ref: "EventImage",
   localField: "_id",

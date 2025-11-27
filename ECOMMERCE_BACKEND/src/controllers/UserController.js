@@ -38,7 +38,6 @@ const createUser = async (req, res) => {
 const loginUser = async (req, res) => {
   try {
     const { email, passwordHash } = req.body;
-    console.log("req.body", req.body);
     if (!email || !passwordHash) {
       return res.status(200).json({
         status: "ERR",
@@ -47,8 +46,14 @@ const loginUser = async (req, res) => {
     }
 
     const responseFromService = await UserService.loginUser(req.body);
-
-    return res.status(200).json(responseFromService);
+    const { refresh_token, ...newReponse } = responseFromService;
+    res.cookie("refresh_token", refresh_token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax", // hoặc “none” nếu dùng https
+      path: "/",
+    });
+    return res.status(200).json(newReponse);
   } catch (e) {
     return res.status(500).json({
       message: e.message || e, // show message thực sự
@@ -58,11 +63,12 @@ const loginUser = async (req, res) => {
 
 const updateUser = async (req, res) => {
   try {
-    const userId = req.params.id;
+    const userId = req.params.id; // sửa lại id
     const data = req.body;
 
     if (!userId) {
-      return res.status(200).json({
+      return res.status(400).json({
+        // dùng 400 cho thiếu params
         status: "ERR",
         message: "The userId is required",
       });
@@ -71,8 +77,9 @@ const updateUser = async (req, res) => {
     const responseFromService = await UserService.updateUser(userId, data);
     return res.status(200).json(responseFromService);
   } catch (e) {
+    console.error("Update user error:", e);
     return res.status(500).json({
-      message: e.message || e, // show message thực sự
+      message: e.message || e,
     });
   }
 };
@@ -90,6 +97,26 @@ const deleteUser = async (req, res) => {
     }
 
     const responseFromService = await UserService.deleteUser(userId);
+    return res.status(200).json(responseFromService);
+  } catch (e) {
+    return res.status(500).json({
+      message: e.message || e, // show message thực sự
+    });
+  }
+};
+const deleteMany = async (req, res) => {
+  try {
+    const ids = req.body;
+    const token = req.headers;
+
+    if (!ids) {
+      return res.status(200).json({
+        status: "ERR",
+        message: "The ids is required",
+      });
+    }
+
+    const responseFromService = await UserService.deleteManyUser(ids);
     return res.status(200).json(responseFromService);
   } catch (e) {
     return res.status(500).json({
@@ -131,7 +158,7 @@ const getDetailUser = async (req, res) => {
 
 const refreshToken = async (req, res) => {
   try {
-    const token = req.headers.token.split(" ")[1];
+    const token = req.cookies.refresh_token;
 
     if (!token) {
       return res.status(200).json({
@@ -142,6 +169,7 @@ const refreshToken = async (req, res) => {
 
     const responseFromService = await JWTService.refreshTokenJWTService(token);
     return res.status(200).json(responseFromService);
+    return;
   } catch (e) {
     return res.status(500).json({
       message: e.message || e,
@@ -149,6 +177,19 @@ const refreshToken = async (req, res) => {
   }
 };
 
+const lockoutUser = async (req, res) => {
+  try {
+    res.clearCookie("refresh_token");
+    return res.status(200).json({
+      status: "OK",
+      message: "Logout Successfully",
+    });
+  } catch (e) {
+    return res.status(500).json({
+      message: e.message || e,
+    });
+  }
+};
 module.exports = {
   createUser,
   loginUser,
@@ -157,4 +198,6 @@ module.exports = {
   getAllUser,
   getDetailUser,
   refreshToken,
+  lockoutUser,
+  deleteMany,
 };
