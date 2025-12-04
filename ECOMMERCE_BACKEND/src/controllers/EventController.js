@@ -1,6 +1,7 @@
 const EventService = require("../services/EventService");
 const EventModel = require("../models/EventModel");
 
+// Hàm createEvent (Giữ nguyên - Đã OK)
 const createEvent = async (req, res) => {
   try {
     // Destructure 5 phần dữ liệu
@@ -58,6 +59,7 @@ const createEvent = async (req, res) => {
   }
 };
 
+// Hàm updateEvent (Giữ nguyên - Đã OK)
 const updateEvent = async (req, res) => {
   try {
     const eventId = req.params.id;
@@ -78,11 +80,13 @@ const updateEvent = async (req, res) => {
     return res.status(200).json(responseFromService);
   } catch (e) {
     return res.status(500).json({
+      status: "ERR", // Thêm status ERR
       message: e.message || e,
     });
   }
 };
 
+// Hàm deleteEvent (Giữ nguyên - Đã OK)
 const deleteEvent = async (req, res) => {
   try {
     const eventId = req.params.id;
@@ -101,11 +105,13 @@ const deleteEvent = async (req, res) => {
     return res.status(200).json(responseFromService);
   } catch (e) {
     return res.status(500).json({
+      status: "ERR", // Thêm status ERR
       message: e.message || e, // show message thực sự
     });
   }
 };
 
+// Hàm getAllEvent (Giữ nguyên - Đã OK)
 const getAllEvent = async (req, res) => {
   const {
     page = 1,
@@ -139,26 +145,38 @@ const getAllEvent = async (req, res) => {
   }
 };
 
+// Hàm getDetailEvent (ĐÃ SỬA: Sửa lỗi mã trạng thái HTTP)
 const getDetailEvent = async (req, res) => {
   try {
     const eventId = req.params.id;
 
     if (!eventId) {
-      return res.status(200).json({
+      // 🎯 SỬA LỖI: Trả về 400 Bad Request nếu thiếu ID
+      return res.status(400).json({
         status: "ERR",
         message: "The eventId is required",
       });
     }
 
     const responseFromService = await EventService.getDetailEvent(eventId);
+
+    // Kiểm tra nếu Service trả về ERR (ví dụ: ID không hợp lệ)
+    if (responseFromService && responseFromService.status === "ERR") {
+      return res.status(400).json(responseFromService);
+    }
+
     return res.status(200).json(responseFromService);
   } catch (e) {
+    // 🎯 SỬA LỖI: Trả về lỗi 500 với status ERR
+    console.error("Lỗi trong getDetailEvent Controller:", e);
     return res.status(500).json({
+      status: "ERR",
       message: e.message || e,
     });
   }
 };
 
+// Hàm deleteMany (Giữ nguyên - Đã OK)
 const deleteMany = async (req, res) => {
   try {
     const ids = req.body;
@@ -177,10 +195,13 @@ const deleteMany = async (req, res) => {
     return res.status(200).json(responseFromService);
   } catch (e) {
     return res.status(500).json({
+      status: "ERR", // Thêm status ERR
       message: e.message || e,
     });
   }
 };
+
+// Hàm getEventsByOrganizer (Giữ nguyên - Đã OK, thêm status ERR vào catch)
 const getEventsByOrganizer = async (req, res) => {
   const organizerId = req.params.organizerId;
 
@@ -204,6 +225,52 @@ const getEventsByOrganizer = async (req, res) => {
     });
   }
 };
+// --- Update trạng thái sự kiện ---
+const updateEventStatus = async (req, res) => {
+  const eventId = req.params.id;
+  const { status } = req.body;
+
+  // Kiểm tra trạng thái hợp lệ
+  if (!["Pending", "Approved", "Rejected"].includes(status)) {
+    return res
+      .status(400)
+      .json({ status: "ERR", message: "Trạng thái không hợp lệ" });
+  }
+
+  try {
+    const event = await EventModel.findByIdAndUpdate(
+      eventId,
+      { status },
+      { new: true }
+    );
+
+    if (!event) {
+      return res
+        .status(404)
+        .json({ status: "ERR", message: "Không tìm thấy sự kiện" });
+    }
+
+    // Realtime: gửi sự kiện qua socket.io nếu có
+    if (global._io) {
+      global._io.emit("event-status-updated", {
+        id: event._id,
+        status: event.status,
+      });
+    }
+
+    return res.status(200).json({
+      status: "OK",
+      message: "Cập nhật trạng thái thành công",
+      data: event,
+    });
+  } catch (err) {
+    console.error("Lỗi updateEventStatus:", err);
+    return res
+      .status(500)
+      .json({ status: "ERR", message: err.message || err.toString() });
+  }
+};
+
 module.exports = {
   createEvent,
   updateEvent,
@@ -212,4 +279,5 @@ module.exports = {
   getDetailEvent,
   deleteMany,
   getEventsByOrganizer,
+  updateEventStatus,
 };

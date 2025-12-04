@@ -8,15 +8,17 @@ const ORDER_STATUSES = [
   "Refunded",
 ];
 const EVENT_STATUSES = [
+  "Draft",
   "Pending",
   "Approved",
   "Rejected",
-  "Draft",
-  "Cancelled",
+  "Ongoing",
   "Finished",
+  "Cancelled",
 ];
+
 const TICKET_TYPES = ["GeneralAdmission", "VIP", "EarlyBird", "Free"];
-const TICKET_STATUSES = ["ConVe", "HetVe", "SapBan"]; // Tương đương 'ConVe' trong C# là 'Còn Vé'
+const TICKET_STATUSES = ["ConVe", "HetVe", "SapBan"];
 const BUSINESS_TYPES = ["Individual", "Enterprise", "Organization"];
 const NOTIFICATION_TYPES = ["System", "Order", "Review", "EventUpdate"];
 

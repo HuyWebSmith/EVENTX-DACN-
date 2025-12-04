@@ -15,6 +15,7 @@ const eventSchema = new Schema(
     description: { type: String },
 
     eventDate: { type: Date, required: true },
+    eventEndDate: { type: Date },
     eventStartTime: { type: Date, required: true },
     eventEndTime: { type: Date, required: true },
 

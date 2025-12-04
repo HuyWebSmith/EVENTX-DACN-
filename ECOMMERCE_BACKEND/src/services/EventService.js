@@ -19,10 +19,8 @@ const createEvent = (
     session.startTransaction();
 
     try {
-      // LỖI XẢY RA KHI BẠN TẠO EVENT MODEL
-      // Hãy đảm bảo bạn sử dụng đối số ĐẦU TIÊN (eventPayload)
-
-      const newEvent = await EventModel.create([eventPayload], { session }); // <-- CHẮC CHẮN PHẢI LÀ eventPayload
+      // 1. Tạo Event (Đảm bảo dùng EventModel)
+      const newEvent = await EventModel.create([eventPayload], { session });
 
       const eventId = newEvent[0]._id;
 
@@ -32,7 +30,6 @@ const createEvent = (
 
       // 3. Tạo Locations (Sử dụng eventId)
       const locationDocuments = locations.map((l) => ({ ...l, eventId }));
-      // SỬA: Thêm { ordered: true }
       await LocationModel.create(locationDocuments, { session, ordered: true });
 
       // 4. Tạo RedInvoice (Sử dụng eventId)
@@ -41,7 +38,6 @@ const createEvent = (
 
       // 5. Tạo EventImages (Sử dụng eventId)
       const imageDocuments = eventImages.map((img) => ({ ...img, eventId }));
-      // SỬA: Thêm { ordered: true }
       await EventImageModel.create(imageDocuments, { session, ordered: true });
 
       await session.commitTransaction();
@@ -56,17 +52,19 @@ const createEvent = (
       reject({
         status: "ERR",
         message: error.message || "Lỗi Service",
-        details: error.errors, // Cung cấp chi tiết lỗi validation Mongoose
+        details: error.errors,
       });
     } finally {
       session.endSession();
     }
   });
 };
+
 const updateEvent = (id, data) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const checkEvent = await Event.findOne({ _id: id });
+      // SỬA LỖI: Thay Event.findOne bằng EventModel.findOne
+      const checkEvent = await EventModel.findOne({ _id: id });
 
       if (checkEvent === null) {
         return resolve({
@@ -75,7 +73,8 @@ const updateEvent = (id, data) => {
           data: null,
         });
       }
-      const updatedEvent = await Event.findByIdAndUpdate(id, data, {
+      // SỬA LỖI: Thay Event.findByIdAndUpdate bằng EventModel.findByIdAndUpdate
+      const updatedEvent = await EventModel.findByIdAndUpdate(id, data, {
         new: true,
       });
       return resolve({
@@ -92,7 +91,8 @@ const updateEvent = (id, data) => {
 const deleteEvent = (id) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const checkEvent = await Event.findOne({ _id: id });
+      // SỬA LỖI: Thay Event.findOne bằng EventModel.findOne
+      const checkEvent = await EventModel.findOne({ _id: id });
 
       if (checkEvent === null) {
         return resolve({
@@ -101,7 +101,8 @@ const deleteEvent = (id) => {
           data: null,
         });
       }
-      await Event.findByIdAndDelete(id);
+      // SỬA LỖI: Thay Event.findByIdAndDelete bằng EventModel.findByIdAndDelete
+      await EventModel.findByIdAndDelete(id);
       return resolve({
         status: "OK",
         message: "DELETE EVENT SUCCESS",
@@ -132,9 +133,13 @@ const getAllEvent = (
         sortObj[sortField] = sortOrder === "asc" ? 1 : -1;
       }
 
-      const totalEvent = await Event.countDocuments(query);
+      const totalEvent = await EventModel.countDocuments(query);
 
-      let eventsQuery = Event.find(query).sort(sortObj);
+      let eventsQuery = EventModel.find(query)
+        .sort(sortObj)
+        .populate("locations")
+        .populate("tickets")
+        .populate("eventImages");
 
       if (limit > 0) {
         eventsQuery = eventsQuery.skip((page - 1) * limit).limit(limit);
@@ -159,7 +164,11 @@ const getAllEvent = (
 const getDetailEvent = (id) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const event = await Event.findOne({ _id: id });
+      const event = await EventModel.findOne({ _id: id })
+        .populate("locations")
+        .populate("tickets")
+        .populate("eventImages")
+        .exec();
 
       if (event === null) {
         return resolve({
@@ -171,7 +180,7 @@ const getDetailEvent = (id) => {
 
       return resolve({
         status: "OK",
-        message: "FINDING USER SUCCESS",
+        message: "FINDING EVENT SUCCESS",
         data: event,
       });
     } catch (e) {
@@ -183,7 +192,8 @@ const getDetailEvent = (id) => {
 const deleteManyEvent = (ids) => {
   return new Promise(async (resolve, reject) => {
     try {
-      await Event.deleteMany({ _id: ids });
+      // SỬA LỖI: Thay Event.deleteMany bằng EventModel.deleteMany
+      await EventModel.deleteMany({ _id: ids });
       return resolve({
         status: "OK",
         message: "DELETE EVENT SUCCESS",

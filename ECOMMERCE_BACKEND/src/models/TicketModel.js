@@ -9,15 +9,13 @@ const ticketSchema = new Schema({
     required: true,
     index: true,
   },
-
   type: {
     type: String,
     required: true,
     trim: true,
   },
-
   price: {
-    type: Number, // decimal(10,2)
+    type: Number,
     required: true,
   },
   quantity: {
@@ -30,16 +28,12 @@ const ticketSchema = new Schema({
     default: 0,
     min: 0,
   },
-  // Available (Quantity - Sold) là trường tính toán (computed property), không cần lưu
-
-  startDate: { type: Date, required: true }, // Ngày có hiệu lực
-  endDate: { type: Date, required: true }, // Ngày hết hiệu lực
-
+  startDate: { type: Date, required: true },
+  endDate: { type: Date, required: true },
   description: { type: String, maxLength: 500 },
-  ticketCode: { type: String, maxLength: 100 }, // Mã loại vé (VD: VIP01, STANDA)
-  discount: { type: Number }, // decimal(5,2)
+  ticketCode: { type: String, maxLength: 100 },
+  discount: { type: Number },
   currency: { type: String, default: "VND" },
-
   trangThai: {
     type: String,
     enum: TICKET_STATUSES,
@@ -47,6 +41,16 @@ const ticketSchema = new Schema({
   },
   ticketSaleStart: { type: Date },
   ticketSaleEnd: { type: Date },
+
+  // --- MỚI: hỗ trợ vé theo khu vực sân khấu ---
+  stageImageUrl: { type: String }, // URL ảnh sân khấu
+  areaCoords: {
+    x: { type: Number, required: true },
+    y: { type: Number, required: true },
+    width: { type: Number, required: true },
+    height: { type: Number, required: true },
+  },
+  isStageImageUrl: { type: Boolean, default: false },
 });
 
 module.exports = mongoose.model("Ticket", ticketSchema);
