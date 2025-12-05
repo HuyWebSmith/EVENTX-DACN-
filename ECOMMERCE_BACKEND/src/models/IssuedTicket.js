@@ -21,14 +21,14 @@ const issuedTicketSchema = new Schema({
   // Đây là ID chỗ ngồi đã được giữ tạm thời (Temporary Hold) và được xác nhận (Confirmed).
   seatId: {
     type: Schema.Types.ObjectId,
-    ref: "Seat", // Giả định bạn có một bảng "Seat"
-    required: true,
+    ref: "Seat",
+    required: false,
     index: true,
   },
 
   userId: {
     type: String, // Khóa ngoại string tới ApplicationUser
-    ref: "ApplicationUser",
+
     index: true,
   },
 

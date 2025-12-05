@@ -7,6 +7,7 @@ const ticketRoutes = require("./routes/ticketRoutes");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const uploadRoute = require("./routes/upload.route");
+const orderRouter = require("./routes/order");
 require("./services/eventStatusCron"); // cron service
 
 const http = require("http");
@@ -25,6 +26,7 @@ app.use("/api/event", eventRoutes);
 app.use("/api/product", eventRoutes); // frontend compatibility
 app.use("/api/upload-image", uploadRoute);
 app.use("/api/tickets", ticketRoutes);
+app.use("/api/orders", orderRouter);
 // MongoDB connect
 mongoose
   .connect(process.env.MONGO_DB)
