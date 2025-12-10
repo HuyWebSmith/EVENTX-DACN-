@@ -18,7 +18,7 @@ const EVENT_STATUSES = [
 ];
 
 const TICKET_TYPES = ["GeneralAdmission", "VIP", "EarlyBird", "Free"];
-const TICKET_STATUSES = ["ConVe", "HetVe", "SapBan"];
+const TICKET_STATUSES = ["ConVe", "HetVe", "SapBan", "HetHan"];
 const BUSINESS_TYPES = ["Individual", "Enterprise", "Organization"];
 const NOTIFICATION_TYPES = ["System", "Order", "Review", "EventUpdate"];
 

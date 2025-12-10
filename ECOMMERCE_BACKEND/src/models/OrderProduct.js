@@ -5,42 +5,37 @@ const { ORDER_STATUSES } = require("../utils/constants"); // Giả định
 const orderSchema = new Schema(
   {
     userId: {
-      type: String, // Khóa ngoại string tới ApplicationUser
+      type: String,
       ref: "ApplicationUser",
       required: true,
       index: true,
     },
     image: { type: String, require: true },
-    totalAmount: {
-      type: Number, // decimal(10,2)
-      required: true,
-      min: 0,
-    },
+    totalAmount: { type: Number, required: true, min: 0 },
 
     fullName: { type: String, required: true },
     email: { type: String, required: true },
     phoneNumber: { type: String, required: true },
-    address: { type: String, require: true },
+    address: { type: String, required: true },
+
     orderStatus: {
       type: String,
       enum: ORDER_STATUSES,
       default: "Pending",
-      required: true,
     },
-    paymentMethod: {
-      type: String,
-      require: true,
-    },
+
+    paymentMethod: { type: String, required: true },
+
     createdAt: {
       type: Date,
       default: Date.now,
     },
-    isEmailSent: {
-      type: Boolean,
-      default: false,
-    },
+
+    isEmailSent: { type: Boolean, default: false },
   },
+
   {
+    timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
   }

@@ -8,7 +8,12 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const uploadRoute = require("./routes/upload.route");
 const orderRouter = require("./routes/order");
+const issuedTicketsRouter = require("./routes/order");
+const issuedTicketsRouter2 = require("./routes/issuedTicket");
+const emailRouter = require("./routes/email");
+const checkinRouter = require("./routes/checkin");
 require("./services/eventStatusCron"); // cron service
+require("./services/ticketStatusCron"); // cron service
 
 const http = require("http");
 const { Server } = require("socket.io");
@@ -27,6 +32,11 @@ app.use("/api/product", eventRoutes); // frontend compatibility
 app.use("/api/upload-image", uploadRoute);
 app.use("/api/tickets", ticketRoutes);
 app.use("/api/orders", orderRouter);
+app.use("/api/issued-tickets", issuedTicketsRouter);
+app.use("/api/issued-tickets2", issuedTicketsRouter2);
+app.use("/api/email", emailRouter);
+app.use("/api/orders", checkinRouter);
+
 // MongoDB connect
 mongoose
   .connect(process.env.MONGO_DB)

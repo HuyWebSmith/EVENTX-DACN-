@@ -49,13 +49,7 @@ const authUserMiddleWare = (req, res, next) => {
         .json({ message: "Token invalid or expired", status: "ERROR" });
     }
 
-    const userId = req.params.id;
-    // So sánh kiểu string để tránh sai
-    if (!(decoded.isAdmin || decoded.id.toString() === userId))
-      return res
-        .status(403)
-        .json({ message: "Not authorized", status: "ERROR" });
-
+    // Chỉ cần token hợp lệ, gán user
     req.user = decoded;
     next();
   });

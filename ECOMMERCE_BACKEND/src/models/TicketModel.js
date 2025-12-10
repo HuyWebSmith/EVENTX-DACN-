@@ -44,12 +44,7 @@ const ticketSchema = new Schema({
 
   // --- MỚI: hỗ trợ vé theo khu vực sân khấu ---
   stageImageUrl: { type: String }, // URL ảnh sân khấu
-  areaCoords: {
-    x: { type: Number, required: true },
-    y: { type: Number, required: true },
-    width: { type: Number, required: true },
-    height: { type: Number, required: true },
-  },
+
   isStageImageUrl: { type: Boolean, default: false },
 });
 

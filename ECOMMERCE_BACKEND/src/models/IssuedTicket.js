@@ -44,6 +44,11 @@ const issuedTicketSchema = new Schema({
     type: Date,
     default: Date.now,
   },
+  status: {
+    type: String,
+    enum: ["Valid", "CheckedIn", "Expired", "Invalid"],
+    default: "Valid",
+  },
 });
 
 module.exports = mongoose.model("IssuedTicket", issuedTicketSchema);

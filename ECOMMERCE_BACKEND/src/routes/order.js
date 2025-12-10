@@ -5,7 +5,7 @@ const OrderDetail = require("../models/OrderDetail");
 const IssuedTicket = require("../models/IssuedTicket");
 const Ticket = require("../models/TicketModel"); // sửa đường dẫn nếu cần
 const HeldTicket = require("../models/HeldTicket");
-
+const { nanoid } = require("nanoid");
 // POST /api/orders/create-paypal
 router.post("/create-paypal", async (req, res) => {
   try {
@@ -36,7 +36,6 @@ router.post("/create-paypal", async (req, res) => {
       orderStatus: "Completed",
       paymentMethod: "PayPal",
       paypalOrderId: paypalOrderId || "",
-      createdAt: new Date(),
     });
 
     console.log("Order created:", newOrder._id);
@@ -52,10 +51,10 @@ router.post("/create-paypal", async (req, res) => {
         quantity,
         price,
       });
-
+      const ticket = await Ticket.findById(ticketId);
       for (let i = 0; i < quantity; i++) {
         await IssuedTicket.create({
-          ticketCode: `${ticketId}-${Date.now()}-${i}`,
+          ticketCode: `${ticketId}-${ticket.type}-${nanoid(10)}`,
           orderDetailId: orderDetail._id,
 
           userId: customerInfo.userId || "guest",
@@ -82,8 +81,8 @@ router.get("/:orderId", async (req, res) => {
   try {
     const order = await Order.findById(req.params.orderId)
       .populate({
-        path: "orderDetails", // field ref trong model Order
-        populate: { path: "ticketId", model: "Ticket" }, // nếu muốn lấy tên vé từ Ticket
+        path: "orderDetails",
+        populate: { path: "ticketId", model: "Ticket" },
       })
       .lean(); // xóa populate nếu ko cần
     if (!order)
@@ -96,6 +95,84 @@ router.get("/:orderId", async (req, res) => {
       quantity: detail.quantity,
     }));
     res.json(order);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Lỗi server" });
+  }
+});
+
+router.get("/get-by-event/:eventId", async (req, res) => {
+  try {
+    const { eventId } = req.params;
+
+    // Lấy tất cả ticketId của event
+    const tickets = await Ticket.find({ eventId });
+    const ticketIds = tickets.map((t) => t._id);
+
+    // Lấy tất cả OrderDetail theo ticketId
+    const orderDetails = await OrderDetail.find({
+      ticketId: { $in: ticketIds },
+    })
+      .populate("orderId")
+      .populate("ticketId")
+      .lean({ virtuals: true });
+
+    if (!orderDetails.length) {
+      return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
+    }
+
+    // Map ra thông tin cần thiết
+    const orders = orderDetails.map((od) => ({
+      orderId: od.orderId._id,
+      ticketName: od.ticketId?.type || "Vé",
+      ticketDescription: od.ticketId?.description || "",
+      quantity: od.quantity,
+      price: od.price,
+      buyer: od.orderId?.fullName,
+      email: od.orderId?.email,
+      status: od.orderId?.orderStatus,
+      createdAt: od.orderId?.createdAt,
+      isEmailSent: od.orderId?.isEmailSent ?? false,
+    }));
+
+    res.json({ success: true, data: orders });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+});
+router.get("/get-by-order/:orderId", async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    // Lấy tất cả orderDetail của order
+    const orderDetails = await OrderDetail.find({ orderId });
+
+    if (!orderDetails.length) {
+      return res.status(404).json({ message: "Không tìm thấy orderDetail" });
+    }
+
+    const orderDetailIds = orderDetails.map((od) => od._id);
+
+    // Lấy tất cả issued ticket liên quan
+    const issuedTickets = await IssuedTicket.find({
+      orderDetailId: { $in: orderDetailIds },
+    })
+      .populate({
+        path: "orderDetailId", // từ IssuedTicket tới OrderDetail
+        populate: { path: "ticketId", model: "Ticket" }, // từ OrderDetail tới Ticket
+      })
+      .lean();
+    const result = issuedTickets.map((t) => ({
+      ticketCode: t.ticketCode,
+      ticketName: t.orderDetailId.ticketId?.type || "Vé",
+      ticketDescription: t.orderDetailId.ticketId?.description || "",
+      quantity: t.orderDetailId.quantity,
+      price: t.orderDetailId.price,
+      isCheckedIn: t.isCheckedIn,
+      checkinTime: t.checkinTime,
+    }));
+    res.json({ data: result });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Lỗi server" });
